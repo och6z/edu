@@ -1,0 +1,543 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="wrapper">
+    <div class="sidebar" data-color="main" data-image="{{ url_for('static', filename='img/sidebar.jpg') }}">
+        <!--<div class="logo">
+          <img class="dashboard-logo" src="{{ url_for('static', filename='img/school-logo.png') }}">
+        </div>-->
+        <div class="sidebar-wrapper">
+            <ul class="nav">
+              <li class="active" id="menu-dashboard">
+                <a style="cursor:pointer">
+                    <i class="material-icons">dashboard</i>
+                    <p>Irányítópult</p>
+                </a>
+              </li>
+              <li id="menu-teachers">
+                  <a style="cursor:pointer">
+                      <i class="material-icons">school</i>
+                      <p>Oktatók</p>
+                  </a>
+              </li>
+              <li id="menu-students">
+                  <a style="cursor:pointer">
+                      <i class="material-icons">group</i>
+                      <p>Hallgatók</p>
+                  </a>
+              </li>
+              <li id="menu-subjects">
+                  <a style="cursor:pointer">
+                      <i class="material-icons">library_books</i>
+                      <p>Tantárgyak</p>
+                  </a>
+              </li>
+              <li id="menu-logout">
+                  <a href="{{ url_for('logout') }}">
+                      <i class="material-icons">exit_to_app</i>
+                      <p>Kilépés</p>
+                  </a>
+              </li>
+            </ul>
+        </div>
+    </div>
+    <div class="main-panel">
+        <nav class="navbar navbar-transparent navbar-absolute">
+            <div class="container-fluid">
+                <div class="navbar-header">
+                    <ul class="nav navbar-nav navbar-left">
+                      <li class="open">
+                          <a id="toggle-sidebar" href="#pablo" class="dropdown-toggle" data-toggle="dropdown" aria-expanded="true">
+                              <i class="material-icons">menu</i>
+                              <p class="hidden-lg hidden-md">Oldalsáv</p>
+                          <div class="ripple-container"></div></a>
+                      </li>
+                      <a class="navbar-brand">EDU irányítópult</a>
+                    </ul>
+                </div>
+                <br>
+            </div>
+        </nav>
+        <div class="content">
+          {% with messages = get_flashed_messages(with_categories=true) %}
+              {% if messages %}
+                {% for category, message in messages %}
+                  {% if category == 'error' %}
+                    <div class="alert alert-danger alert-with-icon" data-notify="container">
+                  {% elif category == 'success' %}
+                    <div class="alert alert-success alert-with-icon" data-notify="container">
+                  {% else %}
+                    <div class="alert alert-info alert-with-icon" data-notify="container">
+                  {% endif %}
+                    <button type="button" aria-hidden="true" class="close" onclick="$('.alert').hide();">×</button>
+                    <i data-notify="icon" class="material-icons">add_alert</i>
+                    <span data-notify="message">
+                      <b> {{ message }} </b>
+                    </span>
+                  </div>
+                {% endfor %}
+              {% endif %}
+            {% endwith %}
+            <div class="container-fluid">
+                <div class="row" style="margin-top: 20px;">
+					<div class="col-lg-4 col-md-6 col-sm-6">
+                        <div class="card card-stats">
+                            <div class="card-header" data-background-color="purple">
+                                <i class="material-icons">school</i>
+                            </div>
+                            <div class="card-content">
+                                <p class="category">Oktatók</p>
+                                <h3 class="title">{{ teachers|count }}</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-md-6 col-sm-6">
+                        <div class="card card-stats">
+                            <div class="card-header" data-background-color="orange">
+                                <i class="material-icons">group</i>
+                            </div>
+                            <div class="card-content">
+                                <p class="category">Hallgatók</p>
+                                <h3 class="title">{{ students|count }}</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-md-6 col-sm-6">
+                        <div class="card card-stats">
+                            <div class="card-header" data-background-color="red">
+                                <i class="material-icons">library_books</i>
+                            </div>
+                            <div class="card-content">
+                                <p class="category">Tantárgyak</p>
+                                <h3 class="title">{{ subjects|count }}</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <!--<img id="dashboard-wallpaper" src="{{ url_for('static', filename='img/wallpaper.jpg') }}" width="100%">-->
+                </div>
+                <div class="row">
+                    <div class="col-lg-12 col-md-12">
+                        <div class="card data-tables" id="students-card">
+                            <div class="card-header" data-background-color="main">
+                                <h4 class="title">Hallgatók</h4>
+                            </div>
+                            <div class="card-content table-responsive">
+                              {% if students %}
+                                <table class="table table-hover">
+                                    <thead class="text-success">
+                                      <th>Azonosító</th>
+                                      <th>Vezetéknév</th>
+                                      <th>Keresztnév</th>
+                                      <th>Email cím</th>
+                                      <th>Tantárgyak</th>
+                                      <th>Szerkesztés</th>
+                                      <th>Törlés</th>
+                                    </thead>
+                                    <tbody>
+                                      {% for student in students %}
+                                        <tr>
+                                            <td>{{ student.student_id }}</td>
+                                            <td>{{ student.last_name }}</td>
+                                            <td>{{ student.first_name }}</td>
+                                            <td>{{ student.email_address }}</td>
+                                            <td>
+                                              {% for minor in student.minors %}
+                                                {{ minor.name }}
+                                                {{ "," if not loop.last }}
+                                              {% endfor %}
+                                            </td>
+                                            <td>
+                                                <button type="button" rel="tooltip" title="Szerkesztés" class="btn btn-success btn-simple btn-xs" data-toggle="modal" data-target="#edit-student-{{ student.student_id }}-modal">
+                                                  <i class="material-icons" style="color: purple;">edit</i>
+                                                </button>
+                                                <div class="modal fade" id="edit-student-{{ student.student_id }}-modal" role="dialog">
+                                                  <div class="modal-dialog">
+                                                    <div class="modal-content">
+                                                      <div class="modal-header">
+                                                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                                        <h4 class="modal-title">Hallgató szerkesztése</h4>
+                                                      </div>
+                                                      <div class="modal-body">
+                                                        <form class="login-form" action="{{ url_for('edit_student', id=student.student_id) }}" method="post" style="padding-right: 30px !important; padding-left: 30px !important;">
+                                                          <div class="row">
+															<div class="col-md-3">
+                                                              <div class="form-group">
+                                                                <label class="bmd-label-floating">Vezetéknév</label>
+                                                                <input type="text" name="last_name" class="form-control" value="{{ student.last_name }}" required>
+                                                              </div>
+                                                            </div>
+                                                            <div class="col-md-3">
+                                                              <div class="form-group">
+                                                                <label class="bmd-label-floating">Keresztnév</label>
+                                                                <input type="text" name="first_name" class="form-control" value="{{ student.first_name }}" required>
+                                                              </div>
+                                                            </div>
+                                                            <div class="col-md-6">
+                                                              <div class="form-group">
+                                                                <label class="bmd-label-floating">Email cím</label>
+                                                                <input type="email" name="email_address" class="form-control" value="{{ student.email_address }}" required>
+                                                              </div>
+                                                            </div>
+                                                          </div>
+                                                          <div class="row">
+                                                            <div class="col-md-7">
+                                                              <div class="form-group">
+                                                                <label class="bmd-label-floating">Tantárgyak</label>
+                                                                  <input type="text" name="minors" class="form-control" value="{% for subject in student.minors %} {{ subject.subject_id }} {{ "," if not loop.last }} {% endfor %}">
+                                                              </div>
+                                                            </div>
+                                                          </div>
+                                                          <button type="submit" class="btn btn-login float-right" data-background-color="main">Hallgató szerkesztése</button>
+                                                        </form>
+                                                      </div>
+                                                      <div class="modal-footer">
+                                                        <button type="button" class="btn btn-default" data-dismiss="modal" data-background-color="red">Bezárás</button>
+                                                      </div>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <button type="button" rel="tooltip" title="Törlés" class="btn btn-danger btn-simple btn-xs">
+                                                  <a href="{{ url_for('delete_student', id=student.student_id) }}">
+                                                    <i class="material-icons" style="color: red;">delete_forever</i>
+                                                  </a>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                      {% endfor %}
+                                    </tbody>
+                                </table>
+                              {% else %}
+                                <p> Jelenleg nincsenek hallgatók az adatbázisban. </p>
+                              {% endif %}
+                              <button class="btn" style="background-color: #ff9800;" data-toggle="modal" data-target="#add-student-modal"><i class="material-icons">add_box</i> Hallgató hozzáadása</button>
+                            </div>
+                        </div>
+                        <div class="modal fade" id="add-student-modal" role="dialog">
+                          <div class="modal-dialog">
+                            <div class="modal-content">
+                              <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">Hallgató hozzáadása</h4>
+                              </div>
+                              <div class="modal-body">
+                                <form class="login-form" action="{{ url_for('add_student') }}" method="post" style="padding-right: 30px !important; padding-left: 30px !important;">
+									<div class="col-md-3">
+                                      <div class="form-group">
+                                        <label class="bmd-label-floating">Vezetéknév</label>
+                                        <input type="text" name="last_name" class="form-control" value="{{ request.form.last_name }}" required>
+                                      </div>
+                                    </div>
+                                  <div class="row">
+                                    <div class="col-md-3">
+                                      <div class="form-group">
+                                        <label class="bmd-label-floating">Keresztnév</label>
+                                        <input type="text" name="first_name" class="form-control" value="{{ request.form.first_name }}" required>
+                                      </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                      <div class="form-group">
+                                        <label class="bmd-label-floating">Email cím</label>
+                                        <input type="email" name="email_address" class="form-control" value="{{ request.form.email_address }}" required>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div class="row">
+                                    <div class="col-md-7">
+                                      <div class="form-group">
+                                        <label class="bmd-label-floating">Tantárgyak</label>
+                                        <input type="text" name="minors" class="form-control" value="{{ request.form.minors }}">
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <button type="submit" class="btn btn-login float-right" style="background-color:#4BD1A0;">Hallgató hozzáadása</button>
+                                </form>
+                              </div>
+                              <div class="modal-footer">
+                                <button type="button" class="btn btn-default" data-dismiss="modal" style="background-color:#ef5350;">Bezárás</button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-lg-12 col-md-12">
+                        <div class="card data-tables" id="teachers-card">
+                            <div class="card-header" data-background-color="main">
+                                <h4 class="title">Oktatók</h4>
+                            </div>
+                            <div class="card-content table-responsive">
+                              {% if teachers %}
+                                <table class="table table-hover">
+                                    <thead class="text-success">
+                                      <th>Azonosító</th>
+                                      <th>Vezetéknév</th>
+                                      <th>Keresztnév</th>
+                                      <th>Email cím</th>
+                                      <th>Tantárgyak</th>
+                                      <th>Szerkesztés</th>
+                                      <th>Törlés</th>
+                                    </thead>
+                                    <tbody>
+                                      {% for teacher in teachers %}
+                                        <tr>
+                                            <td>{{ teacher.staff_id }}</td>
+                                            <td>{{ teacher.last_name }}</td>
+                                            <td>{{ teacher.first_name }}</td>
+                                            <td>{{ teacher.email_address }}</td>
+                                            <td>
+                                              {% for subject in teacher.subjects_taught %}
+                                                {{ subject.name }}
+                                                {{ "," if not loop.last }}
+                                              {% endfor %}
+                                            </td>
+                                            <td>
+                                                <button type="button" rel="tooltip" title="Szerkesztés" class="btn btn-success btn-simple btn-xs" data-toggle="modal" data-target="#edit-teacher-{{ teacher.staff_id }}-modal">
+                                                  <i class="material-icons" style="color: purple;">edit</i>
+                                                </button>
+                                                <div class="modal fade" id="edit-teacher-{{ teacher.staff_id }}-modal" role="dialog">
+                                                  <div class="modal-dialog">
+                                                    <div class="modal-content">
+                                                      <div class="modal-header">
+                                                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                                        <h4 class="modal-title">Oktató szerkesztése</h4>
+                                                      </div>
+                                                      <div class="modal-body">
+                                                        <form class="login-form" action="{{ url_for('edit_teacher', id=teacher.staff_id) }}" method="post" style="padding-right: 30px !important; padding-left: 30px !important;">
+                                                          <div class="col-md-6">
+                                                              <div class="form-group">
+                                                                <label class="bmd-label-floating">Vezetéknév</label>
+                                                                <input type="text" name="last_name" class="form-control" value="{{ teacher.last_name }}">
+                                                              </div>
+                                                            </div>
+                                                          <div class="row">
+                                                            <div class="col-md-6">
+                                                              <div class="form-group">
+                                                                <label class="bmd-label-floating">Keresztnév</label>
+                                                                <input type="text" name="first_name" class="form-control" value="{{ teacher.first_name }}">
+                                                              </div>
+                                                            </div>
+                                                          </div>
+                                                          <div class="row">
+                                                            <div class="col-md-6">
+                                                              <div class="form-group">
+                                                                <label class="bmd-label-floating">Email cím</label>
+                                                                <input type="email" name="email_address" class="form-control" value="{{ teacher.email_address }}">
+                                                              </div>
+                                                            </div>
+                                                            <div class="col-md-6">
+                                                              <div class="form-group">
+                                                                <label class="bmd-label-floating">Tantárgyak</label>
+                                                                <input type="text" name="subjects_taught" class="form-control" value="{% for subject in teacher.subjects_taught %} {{ subject.subject_id }} {{ "," if not loop.last }} {% endfor %}">
+                                                              </div>
+                                                            </div>
+                                                          </div>
+                                                          <button type="submit" class="btn btn-login float-right" data-background-color="main">Oktató szerkesztése</button>
+                                                        </form>
+                                                      </div>
+                                                      <div class="modal-footer">
+                                                        <button type="button" class="btn btn-default" data-dismiss="modal" data-background-color="red">Bezárás</button>
+                                                      </div>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <button type="button" rel="tooltip" title="Törlés" class="btn btn-danger btn-simple btn-xs">
+                                                  <a href="{{ url_for('delete_teacher', id=teacher.staff_id) }}">
+                                                    <i class="material-icons" style="color: red;">delete_forever</i>
+                                                  </a>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                      {% endfor %}
+                                    </tbody>
+                                </table>
+                              {% else %}
+                                <p> Jelenleg nincsenek oktatók az adatbázisban. </p>
+                              {% endif %}
+                              <button class="btn" style="background-color: #ab47bc;" data-toggle="modal" data-target="#add-teacher-modal"><i class="material-icons">add_box</i> Oktató hozzáadása</button>
+                            </div>
+                        </div>
+                        <div class="modal fade" id="add-teacher-modal" role="dialog">
+                          <div class="modal-dialog">
+                            <div class="modal-content">
+                              <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">Oktató hozzáadása</h4>
+                              </div>
+                              <div class="modal-body">
+                                <form class="login-form" action="{{ url_for('add_teacher') }}" method="post" style="padding-right: 30px !important; padding-left: 30px !important;">
+                                  <div class="row">
+									<div class="col-md-6">
+                                      <div class="form-group">
+                                        <label class="bmd-label-floating">Vezetéknév</label>
+                                        <input type="text" name="last_name" class="form-control" value="{{ request.form.last_name }}" required>
+                                      </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                      <div class="form-group">
+                                        <label class="bmd-label-floating">Keresztnév</label>
+                                        <input type="text" name="first_name" class="form-control" value="{{ request.form.first_name }}" required>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div class="row">
+                                    <div class="col-md-6">
+                                      <div class="form-group">
+                                        <label class="bmd-label-floating">Email cím</label>
+                                        <input type="email" name="email_address" class="form-control" value="{{ request.form.email_address }}" required>
+                                      </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                      <div class="form-group">
+                                        <label class="bmd-label-floating">Tantárgyak</label>
+                                        <input type="text" name="subjects_taught" class="form-control" value="{{ request.form.subjects_taught }}">
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <button type="submit" class="btn btn-login float-right" style="background-color:#4BD1A0;">Oktató hozzáadása</button>
+                                </form>
+                              </div>
+                              <div class="modal-footer">
+                                <button type="button" class="btn btn-default" data-dismiss="modal" style="background-color:#ef5350;">Bezárás</button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-12 col-md-12">
+                        <div class="card data-tables" id="subjects-card">
+                            <div class="card-header" data-background-color="main">
+                                <h4 class="title">Tantárgyak</h4>
+                            </div>
+                            <div class="card-content table-responsive">
+                              {% if subjects %}
+                                <table class="table table-hover">
+                                    <thead class="text-success">
+                                      <th>Azonosító</th>
+                                      <th>Tantárgynév</th>
+                                      <th>Leírás</th>
+                                      <th>Oktató</th>
+                                      <th>Hallgatók</th>
+                                      <th>Szerkesztés</th>
+                                      <th>Törlés</th>
+                                    </thead>
+                                    <tbody>
+                                      {% for subject in subjects %}
+                                        <tr>
+                                            <td>{{ subject.subject_id }}</td>
+                                            <td>{{ subject.name }}</td>
+                                            <td>{{ subject.description }}</td>
+                                            <td>{{ subject.teacher.first_name }} {{ subject.teacher.last_name }}</td>
+                                            <td>
+                                              {% for student in subject.minor_students %}
+                                                {{ student.first_name }} {{ student.last_name }}
+                                                {{ "," if not loop.last }}
+                                              {% endfor %}
+                                            </td>
+                                            <td>
+                                                <button type="button" rel="tooltip" title="Szerkesztés" class="btn btn-success btn-simple btn-xs" data-toggle="modal" data-target="#edit-subject-{{ subject.subject_id }}-modal">
+                                                    <i class="material-icons" style="color: purple;">edit</i>
+                                                </button>
+                                                <div class="modal fade" id="edit-subject-{{ subject.subject_id }}-modal" role="dialog">
+                                                  <div class="modal-dialog">
+                                                    <div class="modal-content">
+                                                      <div class="modal-header">
+                                                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                                        <h4 class="modal-title">Tantárgy módosítása</h4>
+                                                      </div>
+                                                      <div class="modal-body">
+                                                        <form class="login-form" action="{{ url_for('edit_subject', id=subject.subject_id) }}" method="post" style="padding-right: 30px !important; padding-left: 30px !important;">
+                                                          <div class="row">
+                                                            <div class="col-md-6">
+                                                              <div class="form-group">
+                                                                <label class="bmd-label-floating">Név</label>
+                                                                <input type="text" name="name" class="form-control" value="{{ subject.name }}">
+                                                              </div>
+                                                            </div>
+                                                            <div class="col-md-6">
+                                                              <div class="form-group">
+                                                                <label class="bmd-label-floating">Oktató azonosítója</label>
+                                                                <input type="text" name="teacher_id" class="form-control" value="{{ subject.teacher_id }}">
+                                                              </div>
+                                                            </div>
+                                                          </div>
+                                                          <div class="col-md-12">
+                                                            <div class="form-group">
+                                                              <label class="bmd-label-floating">Leírás</label>
+                                                              <textarea name="description" class="form-control" maxlength=150>{{ subject.description }}</textarea>
+                                                            </div>
+                                                          </div>
+                                                          <button type="submit" class="btn btn-login float-right" data-background-color="main">Tantárgy módosítása</button>
+                                                        </form>
+                                                      </div>
+                                                      <div class="modal-footer">
+                                                        <button type="button" class="btn btn-default" data-dismiss="modal" data-background-color="red">Bezárás</button>
+                                                      </div>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <button type="button" rel="tooltip" title="Törlés" class="btn btn-danger btn-simple btn-xs">
+                                                  <a href="{{ url_for('delete_subject', id=subject.subject_id) }}">
+                                                    <i class="material-icons" style="color: red;">delete_forever</i>
+                                                  </a>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                      {% endfor %}
+                                    </tbody>
+                                </table>
+                              {% else %}
+                                <p> Jelenleg nincsenek tantárgyak az adatbázisban. </p>
+                              {% endif %}
+                              <button class="btn" style="background-color: #ef5350;" data-toggle="modal" data-target="#add-subject-modal"><i class="material-icons">add_box</i> Tantárgy hozzáadása</button>
+                            </div>
+                        </div>
+                        <div class="modal fade" id="add-subject-modal" role="dialog">
+                          <div class="modal-dialog">
+                            <div class="modal-content">
+                              <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">Tantárgy hozzáadása</h4>
+                              </div>
+                              <div class="modal-body">
+                                <form class="login-form" action="{{ url_for('add_subject') }}" method="post" style="padding-right: 30px !important; padding-left: 30px !important;">
+                                  <div class="row">
+                                    <div class="col-md-6">
+                                      <div class="form-group">
+                                        <label class="bmd-label-floating">Név</label>
+                                        <input type="text" name="name" class="form-control" value="{{ request.form.name }}" required>
+                                      </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                      <div class="form-group">
+                                        <label class="bmd-label-floating">Azonosító</label>
+                                        <input type="text" name="teacher_id" class="form-control" value="{{ request.form.teacher_id }}">
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div class="col-md-12">
+                                    <div class="form-group">
+                                      <label class="bmd-label-floating">Leírás</label>
+                                      <textarea name="description" class="form-control" value="{{ request.form.description }}" maxlength=150 required></textarea>
+                                    </div>
+                                  </div>
+                                  <button type="submit" class="btn btn-login float-right" style="background-color:#4BD1A0;">Tantárgy hozzáadása</button>
+                                </form>
+                              </div>
+                              <div class="modal-footer">
+                                <button type="button" class="btn btn-default" data-dismiss="modal" style="background-color:#ef5350;">Bezárás</button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
